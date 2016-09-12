@@ -1,3 +1,5 @@
+// Timothy Byers
+// September 12, 2016
 /*
  *  This is a simple shell program from
  *  rik0.altervista.org/snippetss/csimpleshell.html
