@@ -1,0 +1,53 @@
+systemd-+-abrtd-+-{gdbus}
+        |       `-{gmain}
+        |-agetty
+        |-atd
+        |-btmplog
+        |-console-kit-dae-+-62*[{console-kit-dae}]
+        |                 |-{gdbus}
+        |                 `-{gmain}
+        |-crond
+        |-dbus-daemon---{dbus-daemon}
+        |-gssproxy---5*[{gssproxy}]
+        |-irqbalance
+        |-lvmetad
+        |-ntpd
+        |-polkitd-+-{JS GC Helper}
+        |         |-{JS Sour~ Thread}
+        |         |-{gdbus}
+        |         |-{gmain}
+        |         `-{runaway-killer-}
+        |-rpc.idmapd
+        |-rpc.mountd
+        |-rpc.statd
+        |-rpcbind
+        |-rsyslogd-+-{in:imjournal}
+        |          `-{rs:main Q:Reg}
+        |-2*[sendmail]
+        |-sh---sh-+-cpio
+        |         |-find
+        |         |-gzip
+        |         `-ssh
+        |-smartd
+        |-sshd-+-sshd---sshd---bash---a.out
+        |      |-6*[sshd---sshd---bash]
+        |      |-2*[sshd---sshd---bash---pico]
+        |      |-3*[sshd---sshd---csh]
+        |      |-sshd---sshd---csh---vim
+        |      |-sshd---sshd---csh---pstree
+        |      |-sshd---sshd---csh---nano
+        |      |-sshd---sshd---bash---ssh
+        |      |-2*[sshd---sshd---sftp-server]
+        |      |-sshd---sshd---bash---pine
+        |      `-sshd---sshd---bash---vim
+        |-sssd-+-sssd_autofs
+        |      |-sssd_be
+        |      |-sssd_nss
+        |      `-sssd_pam
+        |-stunnel---{stunnel}
+        |-16*[systemd---(sd-pam)]
+        |-systemd-journal
+        |-systemd-logind
+        |-systemd-udevd
+        |-upsmon---upsmon
+        `-xinetd
