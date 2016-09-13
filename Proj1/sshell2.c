@@ -1,5 +1,3 @@
-// Timothy Byers
-// September 12, 2016
 /*
  *  This is a simple shell program from
  *  rik0.altervista.org/snippetss/csimpleshell.html
@@ -17,12 +15,7 @@
 #define ARR_SIZE 80
 #define NUMPIPES 10
 
-//#define DEBUG 1  /* In case you want debug messages */
-
-void error(char *s){
-     perror(s);
-     exit(1);
-}
+// #define DEBUG 1  /* In case you want debug messages */
 
 void parse_args(char *buffer, char** args, 
                 size_t args_size, size_t *nargs,
@@ -40,7 +33,6 @@ void parse_args(char *buffer, char** args,
     char *wbuf;  /* String variable that has the command line */
     size_t i, j; 
 
-//    int pipePos[NUMPIPES];	//Array to hold positions of pipes in argument
     int p = 0;
     
     wbuf=buffer;
@@ -107,28 +99,14 @@ void parse_args(char *buffer, char** args,
     for (j=i=0; buf_args[i]!=NULL; i++){ 
         if(strlen(buf_args[i])>0)  /* Store only non-empty tokens */
             args[j++]=buf_args[i];
-	if(!strcmp(args[j - 1],"|")){
-	    /* Add pipe positions to pipePos array */
-	    printf("added pipe\n");
-	    pipes[p] = j - 1;
-	    p++;
+	if(!strcmp(args[j-1], "|")){
+		pipes[p] = j - 1;
+		p++;
 	}
     }
     
     *nargs=j;
     args[j]=NULL;
-
-/*
- * Debug argument loop
- */
-    int l = 0;
-    for (int k = 0; k < j; k++){
-	printf("Argument %d: %s\n", k, args[k]);
-	if(k == pipes[l]){
-		printf("Pipe\n");
-		l++;
-	}
-    }
 }
 
 
@@ -139,20 +117,13 @@ int main(int argc, char *argv[], char *envp[]){
     int *ret_status;
     size_t nargs;
     pid_t pid;
-    pid_t pid2;
     
-    int pipePos[NUMPIPES];    
-    for(int i = 0; i < NUMPIPES; i++)
-	pipePos[i] = -1;
-/*
- * Pipe setup
- */
-    int pipe1[2], n;
-    char buf[255];
-    
-    if(pipe(pipe1) < 0) error("pipe in");
-
     while(1){
+    int pipePos[NUMPIPES];
+	for(int i = 0; i < NUMPIPES; i++)
+		pipePos[i] = -1;
+
+
         printf("ee468>> "); /* Prompt */
         fgets(buffer, BUFFER_SIZE, stdin); /* Read in command line */
               /* Parse the command line into args */
@@ -160,92 +131,69 @@ int main(int argc, char *argv[], char *envp[]){
  
         if (nargs==0) continue; /* Nothing entered so prompt again */
         if (!strcmp(args[0], "exit" )) exit(0);       
+  
+	printf("PIPEPOS[0]: %d\n", pipePos[0]);
+	if(pipePos[0] == -1){	// if there are no pipes
+		pid = fork();
+		if(pid){
+			pid = wait(ret_status);
+		}
+		else{
+			if(execvp(args[0], args)){
+				puts(strerror(errno));
+				exit(127);
+			}
+		}
+	}
+ 		
+    char * execArgs[ARR_SIZE];
+    char * execArgs2[ARR_SIZE];
 
-	char * execArgs[ARR_SIZE];
-	char * execArgs2[ARR_SIZE];
-
-	for(int i = 0; i < nargs; i++){
-	//Add arguments to the command we want to execute
+    for(int i = 0; i < nargs; i++){
 	int j = 0;
-	while(i < nargs && !strcmp(args[i], "|")){
+	while(i < nargs && strcmp(args[i], "|")){
 		execArgs[j] = args[i];
-		j++;
 		i++;
-	}	
-	while(i < nargs && !strcmp(args[i], "|")){
+		j++;
+	}
+	execArgs[j] = NULL;
+	i++;
+	j = 0;
+	while(i < nargs){
 		execArgs2[j] = args[i];
+		printf("%s\n", execArgs2[j]);
 		j++;
 		i++;
-	}
-	}
-	
-	//give input to the function after piping
-	//if(buf[0] != NULL)
-	     //write(in[1], buf, strlen(buf));
-#ifdef DEBUG
-	printf("Stopped loop: %s\n", args[i + 1]);
-#endif
-	
-	pid2 = fork();
-		if(pid2 == 0){
-			close(pipe1[1]);
-			dup2(pipe1[0],0);
-			execvp(execArgs2[0], execArgs2);
-		}
+	} 
+	execArgs2[j] = NULL;
+    }
 
+    int fd[2];
+    pipe(fd);
+    int pid = fork();
+    if (pid == 0) {
+        close(fd[1]);
+        int ret = dup2(fd[0],0);
+        if (ret < 0) perror("dup2 - 0");
+        execvp(execArgs2[0], execArgs2);
+    }
 
-	else {
+    
+    int pid2 = fork();
+    if (pid2 == 0) {
 
-        	pid = fork();
-		if(pid == 0){
-		dup2(pipe1[1],1);
-		execvp(execArgs[0], execArgs);
-		}
-	}
-//	waitpid(pid2);
-	printf("Done?\n");
-	    return 0;
+        int ret = dup2(fd[1],1);
+        if (ret < 0) perror("dup2 - 1");
+        execvp(execArgs[0], execArgs);
+    }
+
+    close(fd[0]);
+    close(fd[1]);
+    int status;
+    //pid = wait(ret_status);
+    waitpid(pid, &status, 0);
+    //printf("Done!\n");
+//    return 0;
+    
 }
 }
-
-
-//	return 0;
-/*
-        if (pid){  // The parent 
-#ifdef DEBUG
-            printf("Waiting for child (%d)\n", pid);
-#endif
-            pid = wait(ret_status);
-#ifdef DEBUG
-            printf("Child (%d) finished\n", pid);
-#endif
-	    printf("test\n");
-	    n = read(out[0], buf, 250);
-	    buf[n] = 0;
-
-	    printf("Output?: %s", buf);
-        } 
-
-        else{  // The child executing the command 
-	    //Close stdin, stdout, stderr
-	    close(0);
-	    close(1);
-	    close(2);
-
-	    //Make pipes stdin, stdout, etc
-	    dup2(pipe1[0],0);
-	    dup2(pipe1[1], 1);
-	    //dup2(out[1], 2);
-
-            if( execvp(execArgs[0], execArgs)) {
-                puts(strerror(errno));
-                exit(127);
-        }
-//	n = read(out[0], buf, 250);
-//	buf[n] = 0;
-
-        }
-	}
-    }    
-*/
-
