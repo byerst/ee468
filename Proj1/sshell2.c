@@ -145,7 +145,7 @@ int main(int argc, char *argv[], char *envp[]){
 			}
 		}
 	}
- 		
+    else {	
     char * execArgs[ARR_SIZE];
     char * execArgs2[ARR_SIZE];
 
@@ -194,6 +194,6 @@ int main(int argc, char *argv[], char *envp[]){
     waitpid(pid, &status, 0);
     //printf("Done!\n");
 //    return 0;
-    
+    }
 }
 }
